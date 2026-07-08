@@ -1,0 +1,43 @@
+name: Release
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Deploy Release to PyPI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: pip install twine
+      - name: Build package
+        run: python setup.py sdist
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.8.10
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
+      - name: Install tox
+        run: pip install tox
+      - name: Generate API docs
+        run: |
+          rm -rf ./docs/_build
+          tox -e docs
+      - name : Docs Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: python_sdk_docs
+          path: docs/_build/html
+      # Test upload
+      # - name: Publish package to TestPyPI
+      #   uses: pypa/gh-action-pypi-publish@master
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.test_pypi_password }}
+      #     repository_url: https://test.pypi.org/legacy/

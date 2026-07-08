@@ -1,0 +1,93 @@
+import sys
+import json
+import urllib.request
+import urllib.parse
+import urllib.error
+from splunk.persistconn.application import PersistentServerConnectionApplication
+
+class LogAnalyzerHandler(PersistentServerConnectionApplication):
+    def __init__(self, command_line, command_arg):
+        super(LogAnalyzerHandler, self).__init__()
+
+    def handle(self, in_string):
+        try:
+            args = json.loads(in_string)
+            query_params = dict(args.get('query', []))
+            
+            raw_log = query_params.get('raw', 'No raw data')
+            pid = query_params.get('pid', '')
+            ppid = query_params.get('ppid', '')
+            host = query_params.get('host', 'unknown')
+            
+            session_key = args.get('session', {}).get('authtoken', '')
+
+            process_tree = [f"Level 0 (Root): PID={pid}, PPID={ppid} | {raw_log}"]
+            current_ppid = ppid
+            
+            import splunk.rest
+            for i in range(1, 5):
+                if not current_ppid or current_ppid == "-" or current_ppid == "0":
+                    break
+                
+                search_query = f'search index=* host="{host}" ProcessId="{current_ppid}" | head 1 | fields _raw, ParentProcessId'
+                try:
+                    response, content = splunk.rest.simpleRequest(
+                        f'/services/search/jobs/export?search={urllib.parse.quote(search_query)}&output_mode=json',
+                        sessionKey=session_key,
+                        method='GET'
+                    )
+                    if response.status == 200 and content:
+                        result = json.loads(content.decode('utf-8'))
+                        if 'result' in result:
+                            parent_raw = result['result'].get('_raw', '')
+                            next_ppid = result['result'].get('ParentProcessId', '')
+                            process_tree.append(f"Level {i} (Parent): PID={current_ppid}, PPID={next_ppid} | {parent_raw}")
+                            current_ppid = next_ppid
+                        else:
+                            break
+                    else:
+                        break
+                except Exception:
+                    break
+
+            cim_context = "Context: Data fields normalized based on CIM."
+            tree_text = "\n".join(process_tree)
+            
+            system_prompt = (
+             "CRITICAL REQUIREMENT: You MUST translate and write your entire final report in VIETNAMESE language. Do not use English in your output."
+         )            )
+            
+            user_prompt = f"{cim_context}\n\nLog chain to analyze:\n{tree_text}"
+
+            payload = {
+                "model": "llama3.2:3b",
+                "prompt": f"System: {system_prompt}\n\nUser: {user_prompt}",
+                "stream": False
+            }
+
+            ollama_url = "http://localhost:11434/api/generate"
+            try:
+                req = urllib.request.Request(ollama_url, data=json.dumps(payload).encode('utf-8'), method='POST')
+                req.add_header('Content-Type', 'application/json')
+                with urllib.request.urlopen(req, timeout=180) as res:
+                    res_body = res.read().decode('utf-8')
+                    ai_reply = json.loads(res_body).get("response", "No response from AI model.")
+            except Exception as e:
+                ai_reply = f"Ollama connection error: {str(e)}"
+
+            return {
+                'payload': {
+                    "prompt": user_prompt,
+                    "ollama_reply": ai_reply
+                },
+                'status': 200
+            }
+
+        except Exception as e:
+            return {
+                'payload': {
+                    "prompt": "Backend execution error",
+                    "ollama_reply": str(e)
+                },
+                'status': 500
+            }

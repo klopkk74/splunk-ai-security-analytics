@@ -1,0 +1,239 @@
+{
+  "ubuntu_auth_log": {
+    "mo_ta": "Log he thong va xac thuc cua may chu Linux (Ubuntu), dung de theo doi tien trinh he thong, lenh cron, hoac cac thao tac phan quyen.",
+    "index": "os_nix",
+    "source": "/var/log/auth.log",
+    "sourcetype": "syslog",
+    "fields_quan_trong": {
+      "USER": "Ten nguoi dung lien quan den su kien (VD: root)",
+      "COMMAND": "Lenh duoc thuc thi tren he thong (VD: /usr/lib/update-notifier/package-system-locked)",
+      "process": "Tien trinh tao ra log (VD: CRON, pkexec)",
+      "host": "Ten may chu sinh ra log (VD: uf-VMware-Virtual-Platform)",
+      "pid": "ID cua tien trinh (Process ID)",
+      "uid": "ID cua nguoi dung (User ID)",
+      "CWD": "Thu muc lam viec hien tai (Current Working Directory) khi lenh duoc goi",
+      "splunk_server": "Ten Indexer luu tru log (VD: idx1, idx2)"
+    },
+    "whitelist": [
+      "process=\"CRON\"",
+      "COMMAND=\"*/usr/lib/update-notifier/package-system-locked*\"",
+      "process=\"systemd:pam\"",
+      "process=\"polkitd\""
+    ]
+  },
+   "ubuntu_syslog": {
+    "mo_ta": "Log he thong chung (syslog) cua Ubuntu, chua thong tin ve cac tien trinh he thong, dich vu (systemd), mang, va canh bao bao mat (nhu AppArmor).",
+    "index": "os_nix",
+    "source": "/var/log/syslog",
+    "sourcetype": "syslog",
+    "fields_quan_trong": {
+      "host": "Ten may chu sinh ra log (VD: uf-VMware-Virtual-Platform)",
+      "process": "Ten tien trinh he thong hoat dong (VD: systemd, CRON, kernel, NetworkManager)",
+      "pid": "ID cua tien trinh (Process ID)",
+      "comm": "Lenh hoac ung dung duoc thuc thi (VD: /usr/bin/gdbus call)",
+      "apparmor": "Trang thai hoat dong cua AppArmor, rat quan trong de phat hien bi chan (VD: DENIED)",
+      "capname": "Quyen he thong duoc tien trinh yeu cau (VD: net_admin)",
+      "operation": "Hanh dong/Thao tac duoc thuc hien (VD: capable, open)",
+      "name": "Doi tuong hoac duong dan file bi tac dong (VD: /proc/sys/vm/max_map_count)",
+      "unit": "Dich vu systemd lien quan (VD: packagekit.service)",
+      "address": "Dia chi IP giao tiep voi tien trinh (VD: 192.168.214.166)",
+      "eventtype": "Phan loai loi hoac su kien (VD: err0r)",
+      "tag": "Nhan gan cho muc do su kien (VD: error)"
+    },
+    "whitelist": [
+      "process=\"systemd\"",
+      "process=\"CRON\"",
+      "process=\"NetworkManager\"",
+      "process=\"kernel\" AND comm=\"*kworker*\"",
+      "process=\"rsyslogd\"",
+      "unit=\"*fwupd-refresh.service*\""
+    ]
+  },
+   "windows_perfmon_network": {
+    "mo_ta": "Log hieu suat mang (Performance Monitor) cua Windows, dung de theo doi luu luong mang, bang thong, toc do tai len va tai xuong cua cac card mang.",
+    "index": "main",
+    "source": "Perfmon:Network Interface",
+    "sourcetype": "Perfmon:Network Interface",
+    "fields_quan_trong": {
+      "host": "Ten may chu Windows (VD: DESKTOP-E0L3LK3)",
+      "counter": "Loai chi so hieu suat dang duoc do luong (VD: Bytes Received/sec de tinh toc do tai xuong, Bytes Sent/sec de tinh toc do tai len)",
+      "Value": "Gia tri do luong thuc te cua chi so (dang con so thong ke)",
+      "instance": "Ten card mang cu the dang hoat dong tren may (VD: Intel[R] 82574L Gigabit Network Connection)",
+      "object": "Doi tuong giam sat (VD: Network Interface)"
+    },
+    "whitelist": [
+      "instance=\"*Loopback*\"",
+      "instance=\"isatap.*\"",
+      "instance=\"*Teredo*\""
+    ]
+  },
+   "windows_application_log": {
+    "mo_ta": "Log ung dung cua Windows (Application), chua cac canh bao, loi, hoac thong tin tu cac phan mem va dich vu chay tren Windows.",
+    "index": "main",
+    "source": "WinEventLog:Application",
+    "sourcetype": "WinEventLog",
+    "fields_quan_trong": {
+      "host": "Ten may chu Windows sinh ra log (VD: DESKTOP-E0L3LK3)",
+      "EventCode": "Ma su kien cua ung dung (VD: 1000 thuong la loi crash ung dung)",
+      "Type": "Loai muc do cua log (VD: Information, Error, Warning)",
+      "SourceName": "Ten phan mem, dich vu hoac tien trinh tao ra log (VD: Microsoft-Windows-Search, ESENT)",
+      "Message": "Noi dung chi tiet cua log, thuong chua nguyen nhan loi, duong dan file DLL hoac thong tin thuc thi",
+      "severity": "Muc do nghiem trong duoc danh gia (VD: high, informational)",
+      "TaskCategory": "Danh muc tac vu cua su kien (VD: General, Logging/Recovery)",
+      "User": "Tai khoan nguoi dung dang chay ung dung do"
+    },
+    "whitelist": [
+      "SourceName=\"Microsoft-Windows-Security-SPP\"",
+      "SourceName=\"Software Protection Platform Service\"",
+      "SourceName=\"ESENT\" AND Type=\"Information\"",
+      "SourceName=\"Microsoft-Windows-RestartManager\" AND Type=\"Information\"",
+      "SourceName=\"VSS\" AND Type=\"Information\""
+    ]
+  },
+   "windows_powershell_log": {
+      "mo_ta": "Log hoat dong cua PowerShell tren Windows, vo cung quan trong de giam sat bao mat, phat hien ma doc fileless",
+      "index": "main",
+      "source": "WinEventLog:Microsoft-Windows-PowerShell/Operational",
+      "sourcetype": "XmlWinEventLog",
+      "fields_quan_trong": {
+        "host": "Ten may chu thuc thi lenh (VD: DESKTOP-E0L3LK3)",
+        "EventCode": "Ma su kien PowerShell (VD: 4104 la log toan bo noi dung script block, 4103 la log module)",
+        "ScriptBlockText": "Noi dung toan bo ma lenh PowerShell duoc thuc thi, day chinh la payload hoac script cua ma doc",
+        "UserID": "Nguoi dung hoac System Account thuc thi lenh (VD: S-1-5-18)",
+        "ProcessID": "ID cua tien trinh PowerShell dang chay",
+        "severity": "Muc do su kien (VD: Informational, Warning)",
+        "ContextInfo": "Thong tin ngu canh, chua phien ban PowerShell hoac Host Application"
+      },
+      "whitelist": [
+      "ScriptBlockText=\"*Set-StrictMode*\"",
+      "ScriptBlockText=\"*Out-Default*\"",
+      "ScriptBlockText=\"*Microsoft.PowerShell.Utility*\"",
+      "ScriptBlockText=\"*function prompt*\""
+    ]
+    },
+   "windows_sysmon_log": {
+    "mo_ta": "Log System Monitor (Sysmon) cua Windows, day la cong cu cot loi de san lung moi de doa (Threat Hunting) va phan tich ma doc. Dung de theo doi tien trinh, ket noi mang, thay doi registry va thao tac file.",
+    "index": "os_win",
+    "source": "WinEventLog:Microsoft-Windows-Sysmon/Operational",
+    "sourcetype": "XmlWinEventLog",
+    "fields_quan_trong": {
+      "host": "Ten may chu Windows sinh ra log (VD: DESKTOP-E0L3LK3)",
+      "EventCode": "Ma su kien Sysmon (VD: 1 = Process Create, 3 = Network Connect, 11 = File Create, 23 = File Delete)",
+      "Image": "Duong dan day du cua tien trinh hoac ma doc dang chay (VD: C:\\Windows\\System32\\cmd.exe)",
+      "CommandLine": "Cau lenh chi tiet bao gom ca tham so duoc thuc thi (Rat quan trong de phat hien lenh doc hai)",
+      "ParentImage": "Duong dan cua tien trinh cha sinh ra tien trinh hien tai",
+      "ParentCommandLine": "Cau lenh cua tien trinh cha",
+      "User": "Tai khoan he thong thuc thi tien trinh (VD: NT AUTHORITY\\SYSTEM)",
+      "TargetFilename": "Duong dan file bi tac dong, bi xoa hoac duoc tao ra",
+      "Hashes": "Ma bam cua file, chua MD5, SHA256 hoac IMPHASH de kiem tra voi danh sach IOCs hoac VirusTotal",
+      "ProcessId": "ID cua tien trinh dang chay (PID)",
+      "ParentProcessId": "ID cua tien trinh cha",
+      "SourceHostname" : "Ten cua may nguon",
+      "SourceIp" : "Dia chi nguon"
+    },
+    "whitelist": [
+      "Image=\"C:\\\\Windows\\\\System32\\\\svchost.exe\" AND CommandLine=\"*-k *\"",
+      "Image=\"*\\\\SplunkUniversalForwarder\\\\*\" OR ParentImage=\"*\\\\SplunkUniversalForwarder\\\\*\" OR CommandLine=\"*\\\\SplunkUniversalForwarder\\\\*\"",
+      "Image=\"C:\\\\Windows\\\\System32\\\\conhost.exe\" AND ParentImage=\"C:\\\\Windows\\\\System32\\\\cmd.exe\"",
+      "Image=\"C:\\\\ProgramData\\\\Microsoft\\\\Windows Defender\\\\*\"",
+      "Image=\"C:\\\\Windows\\\\System32\\\\SearchIndexer.exe\"",
+      "Image=\"C:\\\\Windows\\\\System32\\\\wbem\\\\WmiPrvSE.exe\""
+    ]
+  },
+   "windows_security_log": {
+    "mo_ta": "Log bao mat cua Windows (Security event). Day la nguon du lieu chinh de giam sat dang nhap (logon/logoff), tao tien trinh, phan quyen user, va audit he thong.",
+    "index": "os_win",
+    "source": "WinEventLog:Security",
+    "sourcetype": "wineventlog",
+    "fields_quan_trong": {
+      "host": "Ten may chu Windows (VD: DESKTOP-E0L3LK3)",
+      "EventCode": "Ma su kien bao mat (VD: 4624 = Dang nhap, 4625 = Fail, 4688 = Tien trinh moi)",
+      "signature": "Mo ta bang chu cua EventCode (VD: A new process has been created)",
+      "user": "Ten tai khoan dang hoat dong hoac bi tac dong",
+      "Logon_Type": "Kieu dang nhap (VD: 2 = Truc tiep, 3 = Qua mang, 10 = Remote Desktop)",
+      "Creator_Process_Name": "Duong dan day du cua tien trinh cha",
+      "Creator_Process_ID": "ID cua tien trinh cha (PID dang hex)",
+      "parent_process": "Alias cho tien trinh cha (Giong Creator_Process_Name nhung AI de hieu hon)",
+      "parent_process_id": "Alias cho ID cua tien trinh cha",
+      "parent_process_name": "Ten file rut gon cua tien trinh cha (VD: services.exe)",
+      "parent_process_path": "Duong dan tuyet doi day du cua tien trinh cha (VD: C:\\Windows\\System32\\services.exe)",
+      "New_Process_Name": "Tien trinh moi duoc khoi tao",
+      "Process_Command_Line": "Cau lenh thuc thi cua tien trinh moi",
+      "vendor_privilege": "Quyen dac biet duoc su dung",
+      "action": "Ket qua cua su kien (VD: success, failure)"
+    },
+    "whitelist": [
+      "user=\"*$\"",
+      "user=\"NT AUTHORITY\\\\SYSTEM\" AND Logon_Type=5",
+      "user=\"NT AUTHORITY\\\\NETWORK SERVICE\"",
+      "user=\"NT AUTHORITY\\\\LOCAL SERVICE\"",
+      "New_Process_Name=\"C:\\\\Windows\\\\System32\\\\svchost.exe\"",
+      "New_Process_Name=\"*\\\\SplunkUniversalForwarder\\\\*\" OR Creator_Process_Name=\"*\\\\SplunkUniversalForwarder\\\\*\" OR Process_Command_Line=\"*\\\\SplunkUniversalForwarder\\\\*\""
+    ]
+  },
+   "windows_setup_log": {
+    "mo_ta": "Log cai dat (Setup) cua Windows, dung de theo doi qua trinh cap nhat he dieu hanh (Windows Update), cai dat phan mem, va cac thay doi cau hinh he thong.",
+    "index": "main",
+    "source": "WinEventLog:Setup",
+    "sourcetype": "WinEventLog",
+    "fields_quan_trong": {
+      "host": "Ten may chu Windows (VD: DESKTOP-E0L3LK3)",
+      "EventCode": "Ma su kien lien quan den cai dat hoac cap nhat",
+      "SourceName": "Tien trinh thuc hien thao tac cai dat (VD: Microsoft-Windows-Servicing)",
+      "Message": "Noi dung chi tiet cua log, rat quan trong de tim ten ban cap nhat (VD: KB5011048) hoac yeu cau khoi dong lai (A reboot is necessary)",
+      "Type": "Muc do su kien (VD: Information, Error)",
+      "severity": "Phan loai muc do nghiem trong cua Splunk (VD: informational, error)"
+    },
+    "whitelist": [
+      "SourceName=\"Microsoft-Windows-Servicing\" AND Type=\"Information\"",
+      "SourceName=\"Microsoft-Windows-WUSA\" AND Type=\"Information\"",
+      "Message=\"*A reboot is not necessary*\"",
+      "Message=\"*Initiating changes for package*\""
+    ]
+  },
+   "windows_system_log": {
+    "mo_ta": "Log he thong (System) cua Windows, rat quan trong de theo doi trang thai khoi dong, tat may dot ngot (BSOD), loi phan cung, loi driver, va hoat dong cua cac dich vu cot loi (services).",
+    "index": "os_win",
+    "source": "WinEventLog:System",
+    "sourcetype": "WinEventLog",
+    "fields_quan_trong": {
+      "host": "Ten may chu Windows (VD: DESKTOP-E0L3LK3)",
+      "EventCode": "Ma su kien he thong (VD: 6008 = Tat may dot ngot, 7040 = Thay doi trang thai service)",
+      "signature": "Mo ta ngan gon cua su kien (VD: The previous system shutdown was unexpected, The time service is now synchronizing)",
+      "Message": "Noi dung chi tiet cua log, bao gom loi driver hoac trang thai dich vu",
+      "Service_Name": "Ten dich vu he thong bi anh huong (VD: DHCPv6-Client, EventLog, Kernel-Boot)",
+      "severity": "Muc do nghiem trong cua su kien (VD: informational, error, critical, high)",
+      "status": "Trang thai hoat dong (VD: available, installed, unexpected)"
+    },
+    "whitelist": [
+      "SourceName=\"Microsoft-Windows-DistributedCOM\" AND EventCode=10016",
+      "SourceName=\"Service Control Manager\" AND EventCode=7040 AND Message=\"*background intelligent transfer service*\"",
+      "SourceName=\"Microsoft-Windows-Time-Service\"",
+      "SourceName=\"BTHUSB\""
+    ]
+  },
+   "pfsense_firewall_log": {
+    "mo_ta": "Log tuong lua pfSense (Firewall). Dung de theo doi luu luong mang vao/ra, phat hien quet cong (port scan), va cac ket noi bi chan (block) hoac cho phep (pass).",
+    "index": "pfsense",
+    "source": "pfsense",
+    "sourcetype": "syslog",
+    "fields_quan_trong": {
+      "host": "IP cua may chu pfSense (VD: 192.168.214.165)",
+      "action": "Hanh dong cua tuong lua voi goi tin (VD: block, pass)",
+      "src_ip": "Dia chi IP nguon (Nguon phat sinh ket noi)",
+      "src_port": "Cong dich vu nguon",
+      "dest_ip": "Dia chi IP dich (May chu dich hoac he thong ben trong)",
+      "dest_port": "Cong dich vu dich (VD: 80, 443, 22, 3389)",
+      "transport": "Giao thuc ket noi (VD: tcp, udp, icmp)",
+      "direction": "Huong cua luu luong (VD: in, out)",
+      "interface": "Cong mang tren pfSense ma luu luong di qua (VD: wan, lan)"
+    },
+    "whitelist": [
+      "dest_ip=\"224.0.0.0/4\"",
+      "dest_ip=\"255.255.255.255\"",
+      "transport=\"igmp\"",
+      "dest_port=137 OR dest_port=138",
+      "src_port=68 AND dest_port=67"
+    ]
+  }
+}

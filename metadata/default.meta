@@ -1,0 +1,3 @@
+[commands/geminispl]
+access = read : [ * ], write : [ admin ]
+export = system

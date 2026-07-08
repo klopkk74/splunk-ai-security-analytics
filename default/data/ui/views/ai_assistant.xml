@@ -1,0 +1,55 @@
+<form version="1.1" theme="dark">
+  <label>Hỗ trợ truy vấn SPL</label>
+  
+  <fieldset submitButton="true" autoRun="false">
+    <input type="text" token="user_prompt" searchWhenChanged="false">
+      <label>Nhập yêu cầu phân tích (Tiếng Việt):</label>
+    </input>
+  </fieldset>
+
+  <row>
+    <panel>
+      <html>
+        <style>
+          .hide-filters { 
+              display: none !important; 
+          }
+          
+          .input-text { 
+              width: 600px !important; 
+          }
+          
+          .form-submit { 
+              margin-left: 10px !important;
+          }
+          .panel-footer, .shared-jobstatus-buttons { 
+              display: none !important; 
+          }
+        </style>
+        <div style="text-align: center; padding: 5px;">
+          <h2 style="color: #20C06B; margin-top: 0;">SPL</h2>
+          <p>Hệ thống tự động đọc Data Dictionary và chuyển đổi ngôn ngữ tự nhiên thành câu lệnh truy vấn.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+
+  <row depends="$user_prompt$">
+    <panel>
+      <title>Kết quả từ AI</title>
+      <table>
+        <search>
+          <query>| geminispl prompt="$user_prompt$"</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="wrap">true</option>
+        <option name="rowNumbers">false</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
+        <option name="refresh.display">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

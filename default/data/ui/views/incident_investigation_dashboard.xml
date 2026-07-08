@@ -1,0 +1,357 @@
+<dashboard script="dashboard_modal.js,modal.js" theme="dark" version="1.1">
+
+  <init>
+    <set token="tok_timeline">⏳ Đang phân tích Timeline...</set>
+    <set token="tok_mitre">⏳ Đang map MITRE...</set>
+    <set token="tok_checklist">⏳ Đang lập Playbook...</set>
+    <set token="tok_victim">...</set>
+  </init>
+
+  <search id="ai_multi_chain_core">
+    <query>| incidentinvestigator sid="$form.sid$" time="$form.time$"</query>
+    <earliest>0</earliest>
+    <latest>now</latest>
+    <done>
+      <set token="tok_timeline">$result.Timeline$</set>
+      <set token="tok_mitre">$result.MITRE$</set>
+      <set token="tok_checklist">$result.Checklist$</set>
+      <set token="tok_victim">$result.Victim$</set>
+      <set token="tok_earliest">$result.Earliest$</set>
+      <set token="tok_latest">$result.Latest$</set>
+    </done>
+  </search>
+
+  <search id="base_splunk_logs">
+    <query>index=* host="$tok_victim$" EventCode IN (1, 3, 11, 4104, 4688, 4624, 4625, 7045) NOT "*SplunkUniversalForwarder*" NOT "*splunkd.exe*" NOT "*splunk-*.exe*" NOT "*MicrosoftEdgeUpdate*" NOT "*taskhostw.exe*" NOT "*usoclient.exe*" NOT "*GoogleUpdater*" NOT "*TSTheme.exe*" NOT "*msedgewebview2.exe*" NOT "*wermgr.exe*" NOT "*OneDrive*" NOT "*FileCoAuth*" NOT "*M365Copilot*" NOT "*elevation_service.exe*" NOT "*Sysmon64.exe*" NOT "*TiWorker.exe*" NOT "*RUXIMICS.EXE*" NOT "*clipesu*" NOT "*wsqmcons.exe*" NOT "*devicecensus.exe*" NOT "*WUDFHost.exe*" NOT "*PcaSvc.dll*" NOT "*SecurityHealth*" NOT "*ApplicationFrameHost.exe*" NOT "*PlatformExperienceHelper*" NOT "*platform_experience_helper.exe*" NOT "*PLUGScheduler.exe*" NOT "*DesktopAppInstaller*" NOT "*WindowsPackageManagerServer.exe*" NOT "*SLUI.exe*" NOT "*TextInputHost.exe*" NOT "*pushtoinstall*" NOT "*wuauserv*" NOT "*ctfmon.exe*" NOT "*dwm.exe*" NOT "*csrss.exe*" NOT "*TrustedInstaller.exe*" NOT "*OpenWith.exe*" NOT "*userinit.exe*" NOT "*smss.exe*" NOT "*atbroker.exe*" NOT "*rdpclip*" NOT "*sihost.exe*" NOT "*wmiadap.exe*" NOT "*svchost.exe*" NOT "*svchost.exe* -k netsvcs*" NOT "*svchost.exe* -k LocalSystemNetworkRestricted*" NOT "*svchost.exe* -k UnistackSvcGroup*" NOT "*svchost.exe* -k ClipboardSvcGroup*" | fields _time, host, source, sourcetype, CommandLine, EventCode, src_ip, SourceIp, TargetUserName, User, user, Logon_Type, DestinationPort, Image, TaskCategory, eventtype, _raw</query>
+    <earliest>$tok_earliest$</earliest>
+    <latest>$tok_latest$</latest>
+  </search>
+
+  <row depends="$hidden$">
+    <panel>
+      <html>
+        <style>
+          .dashboard-body { background-color: #0b0e14 !important; }
+          .dashboard-panel { background-color: #141b24 !important; border: 1px solid #222b38 !important; border-radius: 8px !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; }
+          .panel-title { color: #d1d5db !important; font-size: 13px !important; font-family: -apple-system, sans-serif !important; text-transform: uppercase; border-bottom: 1px solid #222b38; padding-bottom: 12px; margin-bottom: 15px; font-weight: 600 !important; letter-spacing: 0.5px;}
+          
+          .header-container { display: flex; gap: 15px; justify-content: space-between; margin-bottom: 5px; }
+          .header-card { flex: 1; background-color: #141b24; border: 1px solid #222b38; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; overflow: hidden; font-family: -apple-system, sans-serif;}
+          .header-card .title { font-size: 14px; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+          .header-card .value { font-size: 18px; font-weight: bold; }
+          .header-card .big-number { font-size: 32px; position: absolute; right: 15px; top: 12px; font-weight: bold; line-height: 1; opacity: 0.8; }
+          
+          /* FIX: Đổi từ hidden sang auto để tự động cuộn khi văn bản quá dài */
+          .text-fade-container { 
+            height: 210px; 
+            overflow: auto !important; 
+            position: relative; 
+            font-family: 'Consolas', monospace; 
+            font-size: 13px; 
+            line-height: 1.7; 
+            color: #d1d5db; 
+            white-space: pre-wrap; 
+            word-break: break-word; 
+          }
+          .text-fade-container::after { 
+            content: ""; 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            height: 50px; 
+            background: linear-gradient(transparent, #141b24); 
+            pointer-events: none; 
+            display: none !important; /* FIX: Tắt lớp phủ mờ để tránh đè lên thanh cuộn */
+          }
+          .text-fade-container.scroll-needed {
+            overflow-y: auto;
+          }
+          .text-fade-container.scroll-needed::after {
+            display: none;
+          }
+          
+          .view-details-link { display: block; clear: both; margin-top: 10px; color: #60a5fa; font-size: 12px; text-decoration: none; font-family: -apple-system, sans-serif; position: relative; z-index: 2; }
+          .view-details-link:hover { color: #93c5fd; text-decoration: underline; }
+          
+          .table, .table th, .table td { background-color: transparent !important; color: #d1d5db !important; border-color: #222b38 !important; }
+
+          /* FIX: Đổi từ hidden sang auto để kích hoạt thanh cuộn ngay cả khi JS bị trễ cho Panel 4 và 6 */
+          .dashboard-row:nth-child(4) .dashboard-panel .splunk-view,
+          .dashboard-row:nth-child(4) .dashboard-panel .table-wrapper { 
+            max-height: 200px; 
+            overflow: auto !important; 
+          }
+          .dashboard-row:nth-child(4) .dashboard-panel .splunk-view.scroll-needed {
+            overflow-x: auto !important; 
+            overflow-y: auto !important; 
+          }
+
+          .dashboard-row:nth-child(4) .dashboard-panel .panel-body { max-height: 320px; overflow: visible; }
+
+          /* FIX: Playbook wrapper cũng cần auto !important */
+          .playbook-wrapper { height: 230px; display: flex; flex-direction: column; }
+          .playbook-wrapper .text-fade-container { flex: 1; height: auto; overflow: auto !important; }
+          .playbook-wrapper .text-fade-container.scroll-needed {
+            overflow-y: auto;
+          }
+          .playbook-wrapper .view-details-link { flex-shrink: 0; margin-top: 8px; }
+
+          .text-fade-container.is-loading { display: flex; align-items: center; justify-content: center; text-align: center; }
+          
+          /* Hàm kiểm tra và thêm scroll khi cần */
+          .no-scrollbar { overflow: hidden !important; }
+
+          ::-webkit-scrollbar { width: 4px; height: 4px; }
+          ::-webkit-scrollbar-track { background: transparent; }
+          ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+          ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+          .table { table-layout: auto !important; width: max-content !important; min-width: 100% !important; margin-bottom: 0 !important; }
+          .table th, .table td { white-space: nowrap !important; padding: 6px 10px !important; }
+
+          #panel_top_talkers .table th:nth-child(4) { text-align: center !important; }
+          #panel_top_talkers .table th:nth-child(4) * { display: inline-block !important; text-align: center !important; width: 100% !important; }
+          #panel_top_talkers .table td:nth-child(4) { text-align: left !important; color: #22c55e !important; }
+
+          /* CHỈ SỬA LỖI PANEL 6: Giới hạn khung chứa, thả rông kích thước bảng */
+          #panel_raw_artifacts .splunk-view, 
+          #panel_raw_artifacts .table-wrapper { 
+            overflow: auto !important; 
+            max-height: 200px !important; 
+            width: 100% !important; 
+            max-width: 100% !important; 
+          }
+
+          #panel_raw_artifacts .shared-resultstable {
+            display: inline-block !important;
+            min-width: 100% !important;
+            width: max-content !important;
+            max-width: none !important;
+          }
+
+          /* Đảm bảo bảng không bị tràn ra ngoài panel */
+          #panel_raw_artifacts {
+            overflow: hidden !important;
+          }
+
+          #panel_raw_artifacts .panel-body {
+            overflow: hidden !important;
+            position: relative !important;
+          } 
+        </style>
+      </html>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <html>
+        <div class="header-container">
+          <div class="header-card">
+            <div class="title"><span style="color:#ef4444; font-size:16px;">⚠️</span> CẢNH BÁO KÍCH HOẠT</div>
+            <div class="value" style="color:#ef4444;">AI SOC Alert Triggered</div>
+            <div class="big-number" style="color:#ef4444;">1</div>
+          </div>
+          <div class="header-card">
+            <div class="title"><span style="color:#a855f7; font-size:16px;">👾</span> TÂM CHẤN (VICTIM)</div>
+            <div class="value" style="color:#a855f7;">Host: $tok_victim$</div>
+            <div class="big-number" style="color:#a855f7;">1</div>
+          </div>
+          <div class="header-card">
+            <div class="title"><span style="color:#3b82f6; font-size:16px;">⏱️</span> KHUNG GIỜ ĐIỀU TRA</div>
+            <div class="value" style="color:#3b82f6;">T_gốc +/- $form.time$ Phút</div>
+          </div>
+          <div class="header-card">
+            <div class="title"><span style="color:#f97316; font-size:16px;">🔥</span> MỨC ĐỘ RỦI RO</div>
+            <div class="value" style="color:#f97316;">CRITICAL</div>
+            <div class="big-number" style="color:#f97316;">92</div>
+          </div>
+        </div>
+      </html>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>1. LỊCH TRÌNH DIỄN BIẾN SỰ CỐ (AI TIMELINE)</title>
+      <html>
+        <div class="text-fade-container" id="tfc-timeline">$tok_timeline$</div>
+        <a href="#" class="view-details-btn view-details-link" data-title="1. LỊCH TRÌNH DIỄN BIẾN (FULL)">Xem toàn bộ timeline -&gt;</a>
+        <script>
+          (function() {
+            var el = document.getElementById('tfc-timeline');
+            if (el) {
+              var txt = el.textContent || el.innerText || '';
+              if (txt.indexOf('Đang') !== -1 || txt.indexOf('⏳') !== -1) {
+                el.classList.add('is-loading');
+              }
+              setTimeout(function() {
+                if (el.scrollHeight > el.clientHeight) {
+                  el.classList.add('scroll-needed');
+                }
+              }, 500);
+            }
+          })();
+        </script>
+      </html>
+    </panel>
+    
+    <panel>
+      <title>2. MA TRẬN MITRE ATT&amp;CK (AI MAPPING)</title>
+      <html>
+        <div class="text-fade-container" id="tfc-mitre">$tok_mitre$</div>
+        <a href="#" class="view-details-btn view-details-link" data-title="2. MA TRẬN MITRE ATT&amp;CK (FULL)">Xem chi tiết ma trận ATT&amp;CK -&gt;</a>
+        <script>
+          (function() {
+            var el = document.getElementById('tfc-mitre');
+            if (el) {
+              var txt = el.textContent || el.innerText || '';
+              if (txt.indexOf('Đang') !== -1 || txt.indexOf('⏳') !== -1) {
+                el.classList.add('is-loading');
+              }
+              setTimeout(function() {
+                if (el.scrollHeight > el.clientHeight) {
+                  el.classList.add('scroll-needed');
+                }
+              }, 500);
+            }
+          })();
+        </script>
+      </html>
+    </panel>
+
+    <panel>
+      <title>3. TẦN SUẤT SỰ KIỆN (EVENT SPIKE TIMECHART)</title>
+      <chart>
+        <search base="base_splunk_logs">
+          <query>| timechart span=1m count</query>
+        </search>
+        <option name="height">210</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.seriesColors">[0x22C55E]</option>
+        <option name="charting.chart.columnWidth">0.15</option>
+        <option name="charting.chart.maxColumnWidth">8</option>
+        <option name="charting.backgroundColor">#141b24</option>
+        <option name="charting.foregroundColor">#d1d5db</option>
+        <option name="charting.fontColor">#d1d5db</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.fill">#d1d5db</option>
+        <option name="charting.axisLabelsY.majorLabelStyle.fill">#d1d5db</option>
+        <option name="charting.gridLinesX.showMajorLines">false</option>
+        <option name="charting.gridLinesY.showMajorLines">true</option>
+        <option name="charting.gridLinesY.majorGridLineColor">#222b38</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+      <html>
+        <a href="/app/gemini_spl/search?q=search index=* host=$tok_victim$" target="_blank" class="view-details-link">Xem phân tích chi tiết -&gt;</a>
+      </html>
+    </panel>
+  </row>
+
+  <row>
+    <panel id="panel_top_talkers">
+      <title>4. TOP TÁC NHÂN TƯƠNG TÁC (TOP TALKERS)</title>
+      <table>
+        <search base="base_splunk_logs">
+          <query>| top 5 source 
+| eval percent_val = round(percent, 0)
+| eval Percent = tostring(percent_val) + "%" 
+| rename source as "Process / IP", count as "Log Traffic" 
+| table "Process / IP", "Log Traffic", Percent</query>
+        </search>
+        <option name="count">5</option>
+        <option name="drilldown">none</option>
+        <option name="wrap">true</option>
+        <option name="height">200</option>
+      </table>
+      <html>
+        <a href="/app/gemini_spl/search?q=search index=* host=$tok_victim$ | top 20 source" target="_blank" class="view-details-link">Xem tất cả tiến trình -&gt;</a>
+        <script>
+          (function() {
+            require(['jquery'], function($) {
+              setTimeout(function() {
+                var panel = $('a[href*="top 20 source"]').closest('.dashboard-panel');
+                var view = panel.find('.splunk-view');
+                if (view.length) {
+                  if (view[0].scrollWidth > view[0].clientWidth) {
+                    view.addClass('scroll-needed');
+                  }
+                }
+              }, 1500);
+            });
+          })();
+        </script>
+      </html>
+    </panel>
+
+    <panel>
+      <title>5. SỔ TAY ỨNG PHÓ KHẨN CẤP (PLAYBOOK)</title>
+      <html>
+        <div class="playbook-wrapper">
+          <div class="text-fade-container" id="tfc-playbook">$tok_checklist$</div>
+          <a href="#" class="view-details-btn view-details-link" data-title="5. SỔ TAY ỨNG PHÓ KHẨN CẤP (FULL)">Xem playbook đầy đủ -&gt;</a>
+        </div>
+        <script>
+          (function() {
+            var el = document.getElementById('tfc-playbook');
+            if (el) {
+              var txt = el.textContent || el.innerText || '';
+              if (txt.indexOf('Đang') !== -1 || txt.indexOf('⏳') !== -1) {
+                el.classList.add('is-loading');
+              }
+              setTimeout(function() {
+                if (el.scrollHeight > el.clientHeight) {
+                  el.classList.add('scroll-needed');
+                }
+              }, 500);
+            }
+          })();
+        </script>
+      </html>
+    </panel>
+
+    <panel id="panel_raw_artifacts">
+      <title>6. BẢNG CHỨNG CỨ GỐC (RAW ARTIFACTS)</title>
+      <table>
+        <search base="base_splunk_logs">
+          <query>| head 400 
+| eval Time=strftime(_time, "%H:%M:%S") 
+| eval IP_Thuc_Hien=coalesce(src_ip, SourceIp) 
+| eval User_Thuc_Hien=coalesce(TargetUserName, User, user) 
+| eval "Mục tiêu"=case(isnotnull(IP_Thuc_Hien) AND isnotnull(User_Thuc_Hien), IP_Thuc_Hien." (".User_Thuc_Hien.")", isnotnull(IP_Thuc_Hien), IP_Thuc_Hien, isnotnull(User_Thuc_Hien), host." (".User_Thuc_Hien.")", 1==1, host) 
+| eval "Hành động"=case(EventCode=="4624" AND Logon_Type=="10", "T1219: RDP Logon", EventCode=="3" AND DestinationPort=="3389", "Network RDP (Port 3389)", EventCode=="11", "Tạo tệp tin (File Create)", EventCode=="4104", "Chạy PowerShell ScriptBlock", 1==1, mvjoin(mvappend(Image, TaskCategory, DestinationPort, eventtype, sourcetype), "  |  "))
+| eval CommandLine=coalesce(CommandLine, ScriptBlockText)
+| eval "Logs chi tiết"=case(EventCode=="4624" OR EventCode=="3", host." (Tài khoản: ".coalesce(User_Thuc_Hien, "Unknown").")", 1==1, substr(_raw, 1, 60)."...") 
+| table Time, "Mục tiêu", "Hành động", CommandLine, "Logs chi tiết"</query>
+        </search>
+        <option name="count">5</option>
+        <option name="drilldown">none</option>
+        <option name="wrap">false</option>
+        <option name="height">200</option>
+      </table>
+      <html>
+        <a href="/app/gemini_spl/search?q=search index=* host=$tok_victim$ | table _time, source, sourcetype, _raw" target="_blank" class="view-details-link">Xem toàn bộ chứng cứ -&gt;</a>
+        <script>
+          (function() {
+            require(['jquery'], function($) {
+              setTimeout(function() {
+                var panel = $('a[href*="table _time, source"]').closest('.dashboard-panel');
+                var view = panel.find('.splunk-view');
+                if (view.length) {
+                  // Kiểm tra nội dung có vượt quá chiều rộng hoặc chiều cao không
+                  if (view[0].scrollWidth > view[0].clientWidth || view[0].scrollHeight > view[0].clientHeight) {
+                    view.addClass('scroll-needed');
+                    view.css({'overflow-x':'auto','overflow-y':'auto'});
+                  }
+                }
+              }, 1500);
+            });
+          })();
+        </script>
+      </html>
+    </panel>
+  </row>
+</dashboard>

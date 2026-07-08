@@ -1,0 +1,143 @@
+import sys
+import json
+import urllib.request
+import urllib.parse
+from splunk.persistconn.application import PersistentServerConnectionApplication
+
+class LogAnalyzerHandler(PersistentServerConnectionApplication):
+    def __init__(self, command_line, command_arg):
+        super(LogAnalyzerHandler, self).__init__()
+
+    def handle(self, in_string):
+        try:
+            args = json.loads(in_string)
+            query_params = dict(args.get('query', []))
+            session_key = args.get('session', {}).get('authtoken', '')
+
+            log_index = query_params.get('index', '*')
+            log_time = query_params.get('time', '')
+            log_host = urllib.parse.unquote(query_params.get('host', ''))
+            log_st = urllib.parse.unquote(query_params.get('st', ''))
+            log_ec = urllib.parse.unquote(query_params.get('ec', ''))
+            
+            log_bkt = query_params.get('bkt', '')
+            log_cd = query_params.get('cd', '')
+
+            import splunk.rest
+            raw_log = "Loi: Khong lay duoc Raw Log."
+
+            # --- PHẦN SỬA: LỌC TỌA ĐỘ BẰNG LỆNH WHERE (Bypass API Permission) ---
+            if log_time and session_key:
+                try:
+                    t = float(log_time)
+                    earliest = int(t) - 2
+                    latest = int(t) + 3
+                except:
+                    earliest = 0
+                    latest = "now"
+                
+                # Base search lấy theo thời gian để lách quyền API
+                search_query = f'search index="{log_index}" earliest={earliest} latest={latest}'
+
+                if log_bkt and log_cd:
+                    # Lọc ở cấp độ Pipeline (where) để chọn đúng 1 log duy nhất
+                    search_query += f' | where _bkt="{log_bkt}" AND _cd="{log_cd}"'
+                else:
+                    if log_host: search_query += f' host="{log_host}"'
+                    if log_st: search_query += f' sourcetype="{log_st}"'
+                    if log_ec: search_query += f' "{log_ec}"'
+            else:
+                search_query = f'search index="{log_index}"'
+            
+            search_query += ' | head 1'
+            # --------------------------------------------------------------------
+
+            post_args = {
+                'search': search_query,
+                'output_mode': 'json',
+                'exec_mode': 'oneshot'
+            }
+            try:
+                response, content = splunk.rest.simpleRequest(
+                    '/services/search/jobs/export',
+                    sessionKey=session_key,
+                    postargs=post_args,
+                    method='POST'
+                )
+                if response.status == 200 and content:
+                    lines = content.decode('utf-8').split('\n')
+                    found = False
+                    for line in lines:
+                        if not line.strip(): continue
+                        try:
+                            data_json = json.loads(line)
+                            if 'result' in data_json and '_raw' in data_json['result']:
+                                raw_log = data_json['result']['_raw']
+                                found = True
+                                break
+                        except Exception:
+                            pass
+                    if not found:
+                        raw_log = f"[CẢNH BÁO] Splunk trả về 0 kết quả. Lệnh đã chạy: {search_query}"
+            except Exception as e:
+                raw_log = f"[LỖI REST API] {str(e)}"
+
+
+            system_prompt = (
+                "You are an Elite SOC Analyst, Threat Hunter, and DFIR Specialist. Your absolute priority is to analyze RAW LOGS to detect genuine cyber threats while STRICTLY ELIMINATING FALSE POSITIVES. You analyze logs across all domains: Windows/Linux Endpoints, Firewalls, Web Proxies, and Cloud environments.\n\n"
+                
+                "--- CORE ANALYTICAL DIMENSIONS (THE 5W1H FRAMEWORK) ---\n"
+                "When analyzing ANY log, internally evaluate the following before writing the report:\n"
+                "1. IDENTITY & PRIVILEGE (Who): Did a human user (e.g., JSmith) or a system account (e.g., NT AUTHORITY\\SYSTEM, root) perform the action? Is the privilege level appropriate for the task?\n"
+                "2. EXECUTION & ACTOR (What): The logging provider (e.g., 'Microsoft-Windows-Sysmon', 'FortiGate') is the CAMERA, NOT the ACTOR. The true Actor is the 'Image', 'ProcessName', or 'Source IP'. What command-line arguments (CommandLine) were executed?\n"
+                "3. TARGET & IMPACT (Where): What is being accessed, modified, or deleted? (e.g., TargetFilename, RegistryKey, DestinationIP, URL). Is it a critical system file or a harmless temp file?\n"
+                "4. NETWORK & COMMS: If applicable, analyze Ports, Protocols, Bytes In/Out, and Geo-location. (e.g., RDP over port 3389, DNS tunneling).\n\n"
+                
+                "--- STRICT ANTI-HALLUCINATION & NOISE REDUCTION RULES ---\n"
+                "RULE 1 - ZERO INVENTIONS: NEVER invent, guess, or append IPs, Hashes, Domains, or Usernames that are NOT explicitly written in the raw log.\n"
+                "RULE 2 - MITRE ATT&CK ACCURACY: DO NOT generate specific MITRE Technique IDs (like T1059.001) unless you are mathematically certain. Use broad Tactic names instead (e.g., 'Execution', 'Defense Evasion'). If the event is benign, state 'Không áp dụng'.\n"
+                "RULE 3 - THE 'TEMP FILE' EXCEPTION (BENIGN): Applications routinely create and delete their own temporary configuration, cache, or `.TMP` files in directories like `AppData`, `Temp`, or `ProgramData`. This is NORMAL SOFTWARE CLEANUP, not malicious file wiping. Mark as BENIGN.\n"
+                "RULE 4 - THE 'SYSTEM AUTOMATION' EXCEPTION (BENIGN): Legitimate binaries (e.g., svchost.exe, msmpeng.exe, chrome.exe) performing network checks or background updates under SYSTEM context are generally safe unless exhibiting anomalous behavior (e.g., writing to startup folders).\n\n"
+                
+                "--- OUTPUT MARKDOWN SCHEMA ---\n"
+                "You MUST generate the final report ENTIRELY IN PROFESSIONAL VIETNAMESE, preserving English IT acronyms (e.g., IP, Hash, Process, Registry, Payload). STRICTLY adhere to the following structure:\n\n"
+                
+                "**1. Tóm tắt Sự kiện (Executive Summary):**\n"
+                "[Viết 1-2 câu súc tích theo công thức: (Tác nhân/Tiến trình) dưới quyền (Tài khoản) đã thực hiện (Hành động) đối với (Mục tiêu/Đích đến). Trực tiếp, không lan man.]\n\n"
+                
+                "**2. Dữ liệu Điều tra Cốt lõi (Core IOCs & Artifacts):**\n"
+                "- **Tác nhân (Actor): [Điền chính xác giá trị của trường 'Image', 'ProcessName' hoặc 'Source IP']\n"
+                "- **Hành động (Action): [Tên hành vi. Ví Dụ: Tạo tiến trình, Xóa File, Kết nối mạng]\n"
+                "- **Mục tiêu (Target): [File đích / Dest IP / Registry Key / host]\n"
+                "- **Chỉ báo tin cậy (Hashes/Domains): [Trích xuất chính xác MD5/SHA256 hoặc Domain. Nếu không có ghi 'Không có dữ liệu']\n\n"                 
+                "**3. Phân tích Ngữ cảnh Chuyên sâu (Deep-Dive Contextual Analysis):**\n"
+                "[Phân tích logic của sự kiện: Tại sao Tác nhân lại làm việc này? Đây là hành vi hợp lệ của hệ điều hành/phần mềm (như dọn dẹp bộ nhớ đệm, tự động cập nhật) hay mang dấu hiệu của tấn công (như ẩn giấu file, thực thi mã độc)? Đưa ra lập luận rõ ràng.]\n\n"
+                
+                "**4. Đánh giá Rủi ro & Khung MITRE (Risk Assessment & MITRE ATT&CK):**\n"
+                "- **Mức độ rủi ro:** [Chọn 1: Benign (An toàn) / Low / Medium / High / Critical]\n"
+                "- **Cơ sở đánh giá:** [1 câu giải thích tại sao chọn mức độ này.]\n"
+                "- **MITRE ATT&CK:** [Liệt kê Tactics liên quan. TUYỆT ĐỐI không bịa mã T-ID. Nếu rủi ro là Benign/Low, ghi rõ 'Không áp dụng do là hành vi hệ thống hợp lệ'.]"
+            )
+            user_prompt = f"--- [RAW LOG DATA] ---\n{raw_log}\n"
+            payload = {
+                "model": "llama3.2:3b",
+                "prompt": f"System: {system_prompt}\n\nUser: {user_prompt}",
+                "stream": False
+            }
+
+            ollama_url = "http://127.0.0.1:11434/api/generate"
+            try:
+                req = urllib.request.Request(ollama_url, data=json.dumps(payload).encode('utf-8'), method='POST')
+                req.add_header('Content-Type', 'application/json')
+                with urllib.request.urlopen(req, timeout=120) as res:
+                    res_body = res.read().decode('utf-8')
+                    ai_reply = json.loads(res_body).get("response", "Ollama không trả về dữ liệu.")
+            except Exception as e:
+                ai_reply = f"[LỖI OLLAMA] {str(e)}"
+
+            return {
+                'payload': json.dumps({"prompt": user_prompt, "ollama_reply": ai_reply}),
+                'status': 200
+            }
+        except Exception as e:
+            return {'payload': json.dumps({"prompt": "Python Error", "ollama_reply": str(e)}), 'status': 500}

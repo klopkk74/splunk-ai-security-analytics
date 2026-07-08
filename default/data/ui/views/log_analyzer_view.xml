@@ -1,0 +1,68 @@
+<dashboard version="1.1" script="log_analyzer.js" theme="dark">
+  <label>AI Local Event Analyzer</label>
+  <row>
+    <panel>
+      <html id="ai_modal_container">
+        <style>
+            .ai-container { padding: 20px; font-family: Arial; color: #fff; }
+            .ai-header { color: #20C06B; text-align: center; }
+            .ai-loading { text-align: center; font-style: italic; color: #aaa; margin-top: 30px; }
+            
+            .ai-table { 
+                width: 100%; 
+                table-layout: fixed !important; /* ĐÂY LÀ CHỐT CHẶN ÉP 50/50 */
+                border-collapse: collapse; 
+                margin-top: 20px; 
+            }
+            
+            .ai-table th, .ai-table td { 
+                border: 1px solid #444 !important; 
+                padding: 15px !important; 
+                text-align: left; 
+                vertical-align: top; 
+            }
+            
+            .ai-table th { background-color: #222 !important; color: #20C06B !important; width: 50%; }
+
+            .custom-pre {
+                background-color: #1a1a1a !important;
+                color: #e0e0e0 !important;
+                border: 1px solid #333 !important;
+                white-space: pre-wrap !important;
+                
+                /* ĐÂY LÀ BỘ BA CẮT ĐỨT CHUỖI HASH */
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                word-break: break-all !important;
+                
+                font-family: monospace !important;
+                padding: 10px !important;
+                border-radius: 4px !important;
+            }
+            
+            #cell_reply { color: #ffffff !important; font-size: 14px !important; line-height: 1.6 !important; }
+        </style>
+        <div class="ai-container">
+            <h2 class="ai-header">AI LOG ANALYSIS REPORT</h2>
+            <div id="ai_status" class="ai-loading">Calling Ollama... Please wait...</div>
+            <div id="ai_result" style="display: none;">
+                <table class="ai-table">
+                    <thead>
+                        <tr>
+                            <th>Input Data (Enriched &amp; Normalized)</th>
+                            <th>AI Report (Ollama Local)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div id="cell_prompt" class="custom-pre"></div></td>
+                            <td><div id="cell_reply"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </html>
+    </panel>
+  </row>
+</dashboard>

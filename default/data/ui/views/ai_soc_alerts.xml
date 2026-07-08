@@ -1,0 +1,23 @@
+<dashboard version="1.1" script="alert_interceptor.js">
+  <label>AI SOC Alerts</label>
+  <row>
+    <panel>
+      <table id="alert_table">
+        <title>Danh sách các Alert được kích hoạt</title>
+        <search>
+          <query>
+            index=_audit action=alert_fired
+            | dedup ss_name, sid
+            | rename ss_name as "Alert Name"
+            | eval Count=1, Action="Analysis alert 🔍"
+            | table "Alert Name", Count, Action, sid
+            | where isnotnull(sid) AND sid!=""
+          </query>
+          <earliest>-7d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>
