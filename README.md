@@ -33,15 +33,44 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 Dự án này chủ yếu chia sẻ các kịch bản (scripts) và cấu hình (configs) được tích hợp vào Splunk:
 
 ```text
-📦 splunk-ai-soc
- ┣ 📂 configs/             # Các file cấu hình Splunk (.conf)
- ┃ ┣ 📜 inputs.conf        # Cấu hình thu thập log
- ┃ ┣ 📜 indexes.conf       # Cấu hình lưu trữ Indexer
- ┃ ┗ 📜 workflow_actions.conf # Cấu hình hành động trên giao diện
- ┣ 📂 scripts_ai/          # Các kịch bản giao tiếp giữa Splunk và LLM
- ┃ ┣ 📜 gemini_spl.py      # Sinh lệnh SPL từ Tiếng Việt
- ┃ ┣ 📜 log_analyzer.py    # Phân tích cú pháp và giải nghĩa Log
- ┃ ┗ 📜 incident_investigator.py # Multi-chain LLM điều tra sự cố
- ┣ 📂 dashboards/          # Source XML của các Dashboard giám sát
- ┣ 📜 data_dictionary.json # Từ điển dữ liệu cấp ngữ cảnh cho AI (RAG)
- ┗ 📜 README.md
+## 📂 Cấu trúc dự án
+
+```text
+📦 splunk-ai-security-analytics
+ ┣ 📂 splunk_app/                # Splunk App
+ ┃ ┣ 📂 bin/                     # Scripts xử lý chính
+ ┃ ┃ ┣ 📜 gemini_spl.py          # Convert natural language to SPL
+ ┃ ┃ ┣ 📜 incident_investigator.py # Multi-chain AI investigation
+ ┃ ┃ ┗ 📜 log_analyzer.py        # Parse and analyze raw logs
+ ┃ ┣ 📂 default/                 # Cấu hình mặc định
+ ┃ ┃ ┣ 📜 app.conf               # Thông tin ứng dụng
+ ┃ ┃ ┣ 📜 commands.conf          # Đăng ký custom commands
+ ┃ ┃ ┣ 📜 restmap.conf           # REST API endpoints
+ ┃ ┃ ┣ 📜 web.conf               # Cấu hình giao diện web
+ ┃ ┃ ┗ 📜 workflow_actions.conf  # Hành động tương tác trên UI
+ ┃ ┣ 📂 local/                   # Cấu hình tùy chỉnh
+ ┃ ┣ 📂 metadata/                # Metadata của App
+ ┃ ┃ ┗ 📜 default.meta           # Quyền truy cập
+ ┃ ┗ 📂 appserver/               # Giao diện người dùng
+ ┃   ┗ 📂 static/
+ ┃       ┣ 📜 alert_interceptor.js    # Đánh chặn cảnh báo, lấy SID
+ ┃       ┣ 📜 dashboard_modalis.js    # Xử lý giao diện Dashboard
+ ┃       ┗ 📜 log_analyzer.js         # Gọi REST API, hiển thị phân tích
+ ┣ 📂 configs/                   # File cấu hình chung
+ ┃ ┗ 📜 data_dictionary.json     # Từ điển dữ liệu cho RAG
+ ┣ 📂 docs/                      # Tài liệu
+ ┃ ┗ 📜 Bao_cao_chuyen_de_Splunk_AI.pdf
+ ┣ 📂 images/                    # Hình ảnh demo
+ ┃ ┣ 📜 dashboard-splunk.png     # Dashboard giám sát
+ ┃ ┣ 📜 ai-query1.png            # Nhập câu hỏi tiếng Việt
+ ┃ ┣ 📜 ai-query2.png            # SPL được sinh ra
+ ┃ ┣ 📜 ai-analysis1.png         # Click vào log
+ ┃ ┣ 📜 ai-analysis2.png         # Báo cáo AI phân tích
+ ┃ ┣ 📜 ai-analysis3.png         # Đánh giá rủi ro + MITRE
+ ┃ ┣ 📜 incident-investigation1.png # Danh sách Alert
+ ┃ ┣ 📜 incident-investigation2.png # Nhập khung thời gian điều tra mở rộng
+ ┃ ┣ 📜 incident-investigation3.png # Dashboard AI điều tra sự cố
+ ┃ ┗ 📜 alert-telegram.png       # Tin nhắn Telegram
+ ┣ 📜 .gitignore                 # File loại trừ khi push
+ ┣ 📜 LICENSE                    # Giấy phép MIT
+ ┗ 📜 README.md                  # Mô tả dự án
