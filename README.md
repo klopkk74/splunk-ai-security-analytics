@@ -99,11 +99,70 @@ cp -r splunk_app/ /opt/splunk/etc/apps/gemini_spl
 
 ### 5. Cấu hình Forwarder
 
-Trên máy Windows/Linux, cài Universal Forwarder và cấu hình gửi log về Indexer.
+**Cài Universal Forwarder trên Windows:**
+```powershell
+msiexec /i splunkforwarder-10.4.0-x64-release.msi /quiet AGREETOLICENSE=Yes
+```
+
+**Cài Universal Forwarder trên Linux:**
+```bash
+wget -O splunkforwarder-10.4.0-linux-amd64.tgz "https://download.splunk.com/products/universalforwarder/releases/10.4.0/linux/splunkforwarder-10.4.0-linux-amd64.tgz"
+tar -xvzf splunkforwarder-*.tgz -C /opt
+/opt/splunkforwarder/bin/splunk start --accept-license
+```
+
+**Cấu hình gửi log về Indexer:**
+```bash
+/opt/splunkforwarder/bin/splunk add forward-server <IP_Indexer>:9997
+```
+
+**Thêm inputs.conf để thu thập log Windows:**
+```bash
+nano /opt/splunkforwarder/etc/system/local/inputs.conf
+```
+
+```conf
+[WinEventLog://Security]
+index = os_win
+disabled = 0
+
+[WinEventLog://Application]
+index = os_win
+disabled = 0
+
+[WinEventLog://System]
+index = os_win
+disabled = 0
+```
+
+**Khởi động lại UF:**
+```bash
+/opt/splunkforwarder/bin/splunk restart
+```
 
 ### 6. Cấu hình Alert Telegram
 
-Thêm Bot Token và Chat ID vào cấu hình Splunk.
+**Cấu hình Trigger Alert trong Splunk:**
+1. Vào Splunk Web → Settings → Searches, reports, and alerts
+2. Chọn alert cần cấu hình → Edit → Trigger Actions
+3. Thêm Webhook với URL:
+```
+https://api.telegram.org/bot<BOT_TOKEN>/sendMessage
+```
+
+**Nội dung Webhook (JSON):**
+```json
+{
+    "chat_id": "<CHAT_ID>",
+    "text": "Alert: $result.message$",
+    "parse_mode": "HTML"
+}
+```
+
+**Kiểm tra Bot hoạt động:**
+```bash
+curl -X POST https://api.telegram.org/bot<BOT_TOKEN>/sendMessage -d "chat_id=<CHAT_ID>&text=Test Alert from Splunk"
+```
 
 ## 📸 Kết quả thực nghiệm
 
