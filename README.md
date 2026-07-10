@@ -1,76 +1,184 @@
 # 🛡️ Splunk SIEM & AI: Automated Threat Detection and Incident Response
 
+[![Splunk](https://img.shields.io/badge/Splunk-Enterprise-00A3E0?logo=splunk&logoColor=white)](https://www.splunk.com/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Research](https://img.shields.io/badge/Type-Research-red)](#)
+
 ## 📌 Giới thiệu
+
 Dự án này là hệ thống Quản lý Sự kiện và Thông tin Bảo mật (SIEM) được xây dựng trên nền tảng Splunk Enterprise, kết hợp với Mô hình ngôn ngữ lớn (LLM) để tối ưu hóa quy trình vận hành của Trung tâm Điều hành An ninh mạng (SOC). 
 
 Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều nguồn (Windows, Linux, pfSense) mà còn tự động hóa việc phát hiện hành vi tấn công (mapping theo MITRE ATT&CK), phân tích ngữ cảnh log và cảnh báo thời gian thực.
 
 **Thực hiện bởi:** Nguyễn Trung Kiên, Nguyễn Văn Khánh, Hoàng Hải Dương (Học viện Kỹ thuật Mật mã).
 
+## 🎯 Mục tiêu
+
+- 🔍 Thiết lập hệ thống SIEM tập trung với Splunk Enterprise
+- ⚔️ Phát hiện hành vi tấn công T1219 - Remote Access Software (AnyDesk)
+- 🤖 Tích hợp LLM hỗ trợ truy vấn, phân tích và điều tra sự cố
+- 🚨 Tự động hóa cảnh báo qua Telegram
+- 📊 Thiết kế Dashboard giám sát trực quan
+
 ## ✨ Tính năng nổi bật
 
-* **🔍 Giám sát & Tương quan sự kiện (Event Correlation):** 
-  * Thu thập và chuẩn hóa dữ liệu (CIM) bằng Universal/Heavy Forwarder.
-  * Thiết kế các rules phát hiện hành vi bất thường (vd: Kịch bản tấn công T1219 - Remote Access Software bằng AnyDesk).
-* **🤖 Tích hợp Trợ lý AI (Local LLM):**
-  * **Natural Language to SPL:** Chuyển đổi ngôn ngữ tự nhiên (Tiếng Việt) thành câu lệnh truy vấn SPL chuyên sâu.
-  * **Log Analyzer:** Cô lập, giải mã (decode Base64/PowerShell) và giải nghĩa ngữ cảnh dòng log thô thành báo cáo dễ hiểu.
-  * **Incident Investigator:** Multi-chain AI tự động tổng hợp timeline sự cố, ánh xạ ma trận MITRE ATT&CK và xuất Playbook ứng phó.
-* **🚨 Cảnh báo tự động (Automated Alerts):**
-  * Tích hợp Webhook đẩy cảnh báo tự động về Telegram Bot với độ trễ tính bằng giây.
-* **📊 Trực quan hóa (Dashboards):** 
-  * Các panel giám sát linh hoạt, tự động cập nhật biểu đồ phân tích tần suất (Event Spike), Top Talkers và Raw Artifacts.
+- **Giám sát & Tương quan sự kiện:** Thu thập và chuẩn hóa dữ liệu (CIM) bằng Universal/Heavy Forwarder. Thiết kế rules phát hiện hành vi bất thường theo MITRE ATT&CK.
+- **Tích hợp Trợ lý AI (Local LLM):**
+  - **Natural Language to SPL:** Chuyển đổi ngôn ngữ tự nhiên (Tiếng Việt) thành câu lệnh SPL.
+  - **Log Analyzer:** Cô lập, giải mã và giải nghĩa ngữ cảnh dòng log thô.
+  - **Incident Investigator:** Multi-chain AI tự động tổng hợp timeline, ánh xạ MITRE ATT&CK và xuất Playbook ứng phó.
+- **Cảnh báo tự động:** Tích hợp Webhook đẩy cảnh báo về Telegram Bot.
+- **Trực quan hóa:** Dashboard giám sát với biểu đồ tần suất, Top Talkers và Raw Artifacts.
 
-## 🛠️ Kiến trúc hệ thống & Công nghệ
+## 🛠️ Công nghệ sử dụng
 
-* **Core SIEM:** Splunk Enterprise (Search Head, Indexers, Forwarders, Deployment Server).
-* **AI/Machine Learning:** Mô hình LLM Llama 3.2 (3B) chạy cục bộ qua Ollama (Air-gapped) để đảm bảo bảo mật dữ liệu log.
-* **Ngôn ngữ & Cú pháp:** Python (REST API handlers), SPL (Search Processing Language), JavaScript (Splunk Web Framework), Sigma Rules.
-* **Mạng & Hạ tầng:** Môi trường lab gồm Ubuntu Server, Windows 10, pfSense Firewall.
+**Core SIEM**
+- Splunk Enterprise (Search Head, Indexers, Forwarders, Deployment Server)
 
-## 📂 Cấu trúc thư mục mã nguồn
+**AI/Machine Learning**
+- LLM Llama 3.2 (3B) chạy cục bộ qua Ollama (Air-gapped)
 
-Dự án này chủ yếu chia sẻ các kịch bản (scripts) và cấu hình (configs) được tích hợp vào Splunk:
+**Ngôn ngữ & Cú pháp**
+- Python (REST API handlers)
+- SPL (Search Processing Language)
+- JavaScript (Splunk Web Framework)
+- Sigma Rules
+
+**Mạng & Hạ tầng**
+- Ubuntu Server, Windows 10, pfSense Firewall
+
+## 📁 Cấu trúc dự án
 
 ```text
-## 📂 Cấu trúc dự án
+splunk-ai-security-analytics/
+├── README.md
+├── LICENSE
+├── .gitignore
+├── splunk_app/
+│   ├── bin/
+│   ├── default/
+│   ├── local/
+│   ├── metadata/
+│   └── appserver/
+├── configs/
+├── docs/
+└── images/
+```
+## 🚀 Hướng dẫn cài đặt & chạy
 
-```text
-📦 splunk-ai-security-analytics
- ┣ 📂 splunk_app/                # Splunk App
- ┃ ┣ 📂 bin/                     # Scripts xử lý chính
- ┃ ┃ ┣ 📜 gemini_spl.py          # Convert natural language to SPL
- ┃ ┃ ┣ 📜 incident_investigator.py # Multi-chain AI investigation
- ┃ ┃ ┗ 📜 log_analyzer.py        # Parse and analyze raw logs
- ┃ ┣ 📂 default/                 # Cấu hình mặc định
- ┃ ┃ ┣ 📜 app.conf               # Thông tin ứng dụng
- ┃ ┃ ┣ 📜 commands.conf          # Đăng ký custom commands
- ┃ ┃ ┣ 📜 restmap.conf           # REST API endpoints
- ┃ ┃ ┣ 📜 web.conf               # Cấu hình giao diện web
- ┃ ┃ ┗ 📜 workflow_actions.conf  # Hành động tương tác trên UI
- ┃ ┣ 📂 local/                   # Cấu hình tùy chỉnh
- ┃ ┣ 📂 metadata/                # Metadata của App
- ┃ ┃ ┗ 📜 default.meta           # Quyền truy cập
- ┃ ┗ 📂 appserver/               # Giao diện người dùng
- ┃   ┗ 📂 static/
- ┃       ┣ 📜 alert_interceptor.js    # Đánh chặn cảnh báo, lấy SID
- ┃       ┣ 📜 dashboard_modalis.js    # Xử lý giao diện Dashboard
- ┃       ┗ 📜 log_analyzer.js         # Gọi REST API, hiển thị phân tích
- ┣ 📂 configs/                   # File cấu hình chung
- ┃ ┗ 📜 data_dictionary.json     # Từ điển dữ liệu cho RAG
- ┣ 📂 docs/                      # Tài liệu
- ┃ ┗ 📜 Bao_cao_chuyen_de_Splunk_AI.pdf
- ┣ 📂 images/                    # Hình ảnh demo
- ┃ ┣ 📜 dashboard-splunk.png     # Dashboard giám sát
- ┃ ┣ 📜 ai-query1.png            # Nhập câu hỏi tiếng Việt
- ┃ ┣ 📜 ai-query2.png            # SPL được sinh ra
- ┃ ┣ 📜 ai-analysis1.png         # Click vào log
- ┃ ┣ 📜 ai-analysis2.png         # Báo cáo AI phân tích
- ┃ ┣ 📜 ai-analysis3.png         # Đánh giá rủi ro + MITRE
- ┃ ┣ 📜 incident-investigation1.png # Danh sách Alert
- ┃ ┣ 📜 incident-investigation2.png # Nhập khung thời gian điều tra mở rộng
- ┃ ┣ 📜 incident-investigation3.png # Dashboard AI điều tra sự cố
- ┃ ┗ 📜 alert-telegram.png       # Tin nhắn Telegram
- ┣ 📜 .gitignore                 # File loại trừ khi push
- ┣ 📜 LICENSE                    # Giấy phép MIT
- ┗ 📜 README.md                  # Mô tả dự án
+### 1. Yêu cầu hệ thống
+
+- Ubuntu Server 20.04+
+- RAM tối thiểu: 8GB
+- Splunk Enterprise 10.4.0
+- Python 3.10+
+- Ollama
+
+### 2. Cài đặt Splunk
+
+```bash
+wget -O splunk-10.4.0-linux-amd64.tgz "https://download.splunk.com/products/splunk/releases/10.4.0/linux/splunk-10.4.0-linux-amd64.tgz"
+tar -xvzf splunk-*.tgz -C /opt
+/opt/splunk/bin/splunk start --accept-license
+```
+
+### 3. Cài đặt Ollama
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull llama3.2:3b
+```
+
+### 4. Triển khai Splunk App
+
+```bash
+cp -r splunk_app/ /opt/splunk/etc/apps/gemini_spl
+/opt/splunk/bin/splunk restart
+```
+
+### 5. Cấu hình Forwarder
+
+Trên máy Windows/Linux, cài Universal Forwarder và cấu hình gửi log về Indexer.
+
+### 6. Cấu hình Alert Telegram
+
+Thêm Bot Token và Chat ID vào cấu hình Splunk.
+
+## 📸 Kết quả thực nghiệm
+
+### 1. Dashboard giám sát
+
+<img width="873" height="448" alt="image" src="https://github.com/user-attachments/assets/75e53a89-ed29-47c9-af2e-a8e2872f46f3" />
+
+*Dashboard hiển thị tổng quan các cảnh báo và trạng thái hệ thống.*
+
+### 2. AI hỗ trợ truy vấn log
+
+<img width="881" height="409" alt="image" src="https://github.com/user-attachments/assets/d8160b3d-35fd-4b14-8807-9ef79e75d125" />
+
+*Người dùng nhập câu hỏi bằng ngôn ngữ tự nhiên.*
+
+<img width="889" height="484" alt="image" src="https://github.com/user-attachments/assets/e7ede6a3-5404-49f2-835f-17ad176b2aad" />
+
+*Dùng câu lệnh SPL của AI vừa sinh để thực hiện truy vấn.*
+
+### 3. AI hỗ trợ phân tích log
+
+<img width="872" height="503" alt="image" src="https://github.com/user-attachments/assets/7dd427c7-f204-4813-81a9-8d35182bf9a7" />
+
+*Chọn một dòng log bất kỳ để phân tích.*
+
+<img width="872" height="510" alt="image" src="https://github.com/user-attachments/assets/0cdc140e-5f16-4b04-a59c-fdd66820aa98" />
+<img width="872" height="493" alt="image" src="https://github.com/user-attachments/assets/4f68e068-f8c6-4029-a0c9-99ae00304747" />
+
+*AI giải nghĩa log và trích xuất thông tin quan trọng.*
+
+### 4. AI hỗ trợ điều tra sự cố
+
+<img width="884" height="280" alt="image" src="https://github.com/user-attachments/assets/a7a9f73b-2c0b-474c-83ba-58287a964f2c" />
+
+*Danh sách các cảnh báo đã kích hoạt.*
+
+<img width="884" height="329" alt="image" src="https://github.com/user-attachments/assets/cf126bca-da1c-46ef-8a37-445284532bc7" />
+
+*Nhập số phút quét mở rộng.*
+
+<img width="991" height="596" alt="image" src="https://github.com/user-attachments/assets/a6239b78-ea33-4ee6-9d7f-9e2fd2998097" />
+
+*Dashboard hiển thị Timeline, MITRE ATT&CK và Playbook ứng phó.*
+
+### 5. Cảnh báo Telegram
+
+<img width="692" height="436" alt="image" src="https://github.com/user-attachments/assets/92b708b0-8ae8-4dbf-bff8-94fac7c425de" />
+
+*Tin nhắn cảnh báo được gửi tự động đến Telegram.*
+
+📁 **Xem toàn bộ ảnh:** [images/](images/)
+
+## 🛡️ Giải pháp phòng chống
+
+- Rule SPL phát hiện AnyDesk với tham số `--set-password`
+- Cảnh báo Telegram trong vòng vài giây
+- AI hỗ trợ truy vấn, phân tích và điều tra
+
+## ⚠️ Disclaimer
+
+> **Dự án này chỉ dành cho mục đích học tập và nghiên cứu.**  
+> ✅ Dữ liệu log được xử lý cục bộ, không gửi ra ngoài.  
+> ✅ Hệ thống được triển khai trong môi trường Lab.  
+> ✅ Mục đích duy nhất là nâng cao kiến thức về SIEM và ứng dụng AI trong SOC.
+
+## 👥 Tác giả
+
+- **Nguyễn Trung Kiên** – AT200432
+- **Nguyễn Văn Khánh** – AT200430
+- **Hoàng Hải Dương** – AT200415
+
+Giảng viên hướng dẫn: **TS. Lê Anh Tiến** - Khoa Công nghệ thông tin, Học viện Kỹ thuật Mật mã
+
+## 📄 Giấy phép
+
+Dự án được phân phối dưới giấy phép MIT. Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
+
+*Hà Nội – 2026*
