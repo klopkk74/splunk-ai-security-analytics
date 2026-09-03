@@ -61,7 +61,6 @@ splunk-ai-security-analytics/
 │   ├── local/
 │   ├── metadata/
 │   └── appserver/
-├── configs/
 ├── docs/
 └── images/
 ```
