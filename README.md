@@ -50,6 +50,7 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 
 ## ⚙️ Yêu cầu cấu hình hệ thống
 
+<div align="center">
 | Thành phần | Hệ điều hành | CPU (core) | Memory (GB) | Disk (GB) |
 |------------|--------------|------------|-------------|-----------|
 | **Search Head** | Ubuntu Server | 2 | 12 | 60 |
@@ -63,10 +64,13 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 | **Forwarder (HF)** | Ubuntu Server | 2 | 2 | 60 |
 | **pfSense** | pfSense | 1 | 1 | 40 |
 
+</div>
 ---
 
 ## 🔌 Cổng mạng sử dụng
 
+<div align="center">
+  
 | Port | Source | Destination | Mô tả |
 |------|--------|-------------|-------|
 | 8000/tcp | Web Browser (user) | Splunk Web | Truy cập giao diện Web của Splunk |
@@ -78,6 +82,7 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 | 20128/tcp | Search Head | API SmartRouter | Quản lý và điều phối API |
 | 11434/tcp | Search Head | Ollama | Truy cập Ollama nội bộ |
 
+</div>
 ---
 
 ## 📁 Cấu trúc dự án
