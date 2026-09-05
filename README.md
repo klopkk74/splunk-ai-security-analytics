@@ -91,7 +91,7 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 ### Sơ đồ tổng quan
 
 <p align="center">
-  <img src="diagrams/architecture.png" alt="Architecture">
+  <img src="diagrams/architecture.png" alt="Architecture" width="80%" height="80%">
 </p>
 
 ---
