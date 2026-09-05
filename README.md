@@ -51,6 +51,7 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 ## ⚙️ Yêu cầu cấu hình hệ thống
 
 <div align="center">
+  
 | Thành phần | Hệ điều hành | CPU (core) | Memory (GB) | Disk (GB) |
 |------------|--------------|------------|-------------|-----------|
 | **Search Head** | Ubuntu Server | 2 | 12 | 60 |
