@@ -48,6 +48,38 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 **Mạng & Hạ tầng**
 - Ubuntu Server, Windows 10, pfSense Firewall
 
+## ⚙️ Yêu cầu cấu hình hệ thống
+
+| Thành phần | Hệ điều hành | CPU (core) | Memory (GB) | Disk (GB) |
+|------------|--------------|------------|-------------|-----------|
+| **Search Head** | Ubuntu Server | 2 | 12 | 60 |
+| **Indexer (idx1)** | Ubuntu Server | 2 | 2 | 60 |
+| **Indexer (idx2)** | Ubuntu Server | 2 | 2 | 60 |
+| **Master Cluster (MC)** | Ubuntu Server | 2 | 2 | 60 |
+| **Heavy Forwarder (HF)** | Ubuntu Server | 2 | 2 | 60 |
+| **Deployment Server (DS)** | Ubuntu Server | 2 | 2 | 60 |
+| **Forwarder (UF nix)** | Linux | 4 | 4 | 60 |
+| **Forwarder (UF win)** | Windows 10 | 4 | 4 | 60 |
+| **Forwarder (HF)** | Ubuntu Server | 2 | 2 | 60 |
+| **pfSense** | pfSense | 1 | 1 | 40 |
+
+---
+
+## 🔌 Cổng mạng sử dụng
+
+| Port | Source | Destination | Mô tả |
+|------|--------|-------------|-------|
+| 8000/tcp | Web Browser (user) | Splunk Web | Truy cập giao diện Web của Splunk |
+| 8089/tcp | Splunk CLI, SH, Deployer, CM | Indexer, UF, DS | Quản trị nội bộ Splunk (splunkd, REST API), DS |
+| 9997/tcp | UF / HF | Indexer | Nhận log từ Universal / Heavy Forwarder |
+| 514/udp | Syslog source (router / firewall) | HF hoặc Indexer (Syslog listener) | Nhận log từ thiết bị gửi theo chuẩn syslog |
+| 22/tcp | Admin | Splunk server (Linux/SSH) | SSH quản trị hệ thống |
+| 443/tcp | Search Head | Telegram | Nhận cảnh báo qua API Telegram |
+| 20128/tcp | Search Head | API SmartRouter | Quản lý và điều phối API |
+| 11434/tcp | Search Head | Ollama | Truy cập Ollama nội bộ |
+
+---
+
 ## 📁 Cấu trúc dự án
 
 ```text
@@ -166,50 +198,50 @@ curl -X POST https://api.telegram.org/bot<BOT_TOKEN>/sendMessage -d "chat_id=<CH
 ## 📸 Kết quả thực nghiệm
 
 ### 1. Dashboard giám sát
-
+<p align="center">
 <img width="873" height="448" alt="image" src="https://github.com/user-attachments/assets/75e53a89-ed29-47c9-af2e-a8e2872f46f3" />
-
+</p>
 *Dashboard hiển thị tổng quan các cảnh báo và trạng thái hệ thống.*
 
 ### 2. AI hỗ trợ truy vấn log
-
+<p align="center">
 <img width="881" height="409" alt="image" src="https://github.com/user-attachments/assets/d8160b3d-35fd-4b14-8807-9ef79e75d125" />
-
+</p>
 *Người dùng nhập câu hỏi bằng ngôn ngữ tự nhiên.*
-
+<p align="center">
 <img width="889" height="484" alt="image" src="https://github.com/user-attachments/assets/e7ede6a3-5404-49f2-835f-17ad176b2aad" />
-
+</p>
 *Dùng câu lệnh SPL của AI vừa sinh để thực hiện truy vấn.*
 
 ### 3. AI hỗ trợ phân tích log
-
+<p align="center">
 <img width="872" height="503" alt="image" src="https://github.com/user-attachments/assets/7dd427c7-f204-4813-81a9-8d35182bf9a7" />
-
+</p>
 *Chọn một dòng log bất kỳ để phân tích.*
-
+<p align="center">
 <img width="872" height="510" alt="image" src="https://github.com/user-attachments/assets/0cdc140e-5f16-4b04-a59c-fdd66820aa98" />
 <img width="872" height="493" alt="image" src="https://github.com/user-attachments/assets/4f68e068-f8c6-4029-a0c9-99ae00304747" />
-
+</p>
 *AI giải nghĩa log và trích xuất thông tin quan trọng.*
 
 ### 4. AI hỗ trợ điều tra sự cố
-
+<p align="center">
 <img width="884" height="280" alt="image" src="https://github.com/user-attachments/assets/a7a9f73b-2c0b-474c-83ba-58287a964f2c" />
-
+</p>
 *Danh sách các cảnh báo đã kích hoạt.*
-
+<p align="center">
 <img width="884" height="329" alt="image" src="https://github.com/user-attachments/assets/cf126bca-da1c-46ef-8a37-445284532bc7" />
-
+</p>
 *Nhập số phút quét mở rộng.*
-
+<p align="center">
 <img width="991" height="596" alt="image" src="https://github.com/user-attachments/assets/a6239b78-ea33-4ee6-9d7f-9e2fd2998097" />
-
+</p>
 *Dashboard hiển thị Timeline, MITRE ATT&CK và Playbook ứng phó.*
 
 ### 5. Cảnh báo Telegram
-
+<p align="center">
 <img width="692" height="436" alt="image" src="https://github.com/user-attachments/assets/92b708b0-8ae8-4dbf-bff8-94fac7c425de" />
-
+</p>
 *Tin nhắn cảnh báo được gửi tự động đến Telegram.*
 
 📁 **Xem toàn bộ ảnh:** [images/](images/)
