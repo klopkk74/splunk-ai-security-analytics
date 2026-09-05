@@ -86,6 +86,13 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 </div>
 ---
 
+## 🏗️ Kiến trúc hệ thống
+
+### Sơ đồ tổng quan
+![Architecture](diagrams/architecture.png)
+
+---
+
 ## 📁 Cấu trúc dự án
 
 ```text
