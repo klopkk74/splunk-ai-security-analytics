@@ -93,6 +93,7 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 <p align="center">
   <img src="diagrams/architecture.png" alt="Architecture">
 </p>
+
 ---
 
 ## 📁 Cấu trúc dự án
