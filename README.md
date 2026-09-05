@@ -291,5 +291,3 @@ curl -X POST https://api.telegram.org/bot<BOT_TOKEN>/sendMessage -d "chat_id=<CH
 ## 📄 Giấy phép
 
 Dự án được phân phối dưới giấy phép MIT. Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
-
-*Hà Nội – 2026*
