@@ -214,49 +214,58 @@ curl -X POST https://api.telegram.org/bot<BOT_TOKEN>/sendMessage -d "chat_id=<CH
 ### 1. Dashboard giám sát
 <p align="center">
 <img width="873" height="448" alt="image" src="https://github.com/user-attachments/assets/75e53a89-ed29-47c9-af2e-a8e2872f46f3" />
+  <br>
+  <em>Dashboard hiển thị tổng quan các cảnh báo và trạng thái hệ thống.</em>
 </p>
-*Dashboard hiển thị tổng quan các cảnh báo và trạng thái hệ thống.*
 
 ### 2. AI hỗ trợ truy vấn log
 <p align="center">
 <img width="881" height="409" alt="image" src="https://github.com/user-attachments/assets/d8160b3d-35fd-4b14-8807-9ef79e75d125" />
+<br>
+<em>Người dùng nhập câu hỏi bằng ngôn ngữ tự nhiên.</em>
 </p>
-*Người dùng nhập câu hỏi bằng ngôn ngữ tự nhiên.*
 <p align="center">
 <img width="889" height="484" alt="image" src="https://github.com/user-attachments/assets/e7ede6a3-5404-49f2-835f-17ad176b2aad" />
+<br>
+<em>Dùng câu lệnh SPL của AI vừa sinh để thực hiện truy vấn.</em>
 </p>
-*Dùng câu lệnh SPL của AI vừa sinh để thực hiện truy vấn.*
 
 ### 3. AI hỗ trợ phân tích log
 <p align="center">
 <img width="872" height="503" alt="image" src="https://github.com/user-attachments/assets/7dd427c7-f204-4813-81a9-8d35182bf9a7" />
+<br>
+<em>Chọn một dòng log bất kỳ để phân tích.</em>
 </p>
-*Chọn một dòng log bất kỳ để phân tích.*
 <p align="center">
 <img width="872" height="510" alt="image" src="https://github.com/user-attachments/assets/0cdc140e-5f16-4b04-a59c-fdd66820aa98" />
 <img width="872" height="493" alt="image" src="https://github.com/user-attachments/assets/4f68e068-f8c6-4029-a0c9-99ae00304747" />
+<br>
+<em>AI giải nghĩa log và trích xuất thông tin quan trọng.</em>
 </p>
-*AI giải nghĩa log và trích xuất thông tin quan trọng.*
 
 ### 4. AI hỗ trợ điều tra sự cố
 <p align="center">
 <img width="884" height="280" alt="image" src="https://github.com/user-attachments/assets/a7a9f73b-2c0b-474c-83ba-58287a964f2c" />
+<br>
+<em>Danh sách các cảnh báo đã kích hoạt.</em>
 </p>
-*Danh sách các cảnh báo đã kích hoạt.*
 <p align="center">
 <img width="884" height="329" alt="image" src="https://github.com/user-attachments/assets/cf126bca-da1c-46ef-8a37-445284532bc7" />
+<br>
+<em>Nhập số phút quét mở rộng.</em>
 </p>
-*Nhập số phút quét mở rộng.*
 <p align="center">
 <img width="991" height="596" alt="image" src="https://github.com/user-attachments/assets/a6239b78-ea33-4ee6-9d7f-9e2fd2998097" />
+<br>
+<em>Dashboard hiển thị Timeline, MITRE ATT&CK và Playbook ứng phó.</em>
 </p>
-*Dashboard hiển thị Timeline, MITRE ATT&CK và Playbook ứng phó.*
 
 ### 5. Cảnh báo Telegram
 <p align="center">
 <img width="692" height="436" alt="image" src="https://github.com/user-attachments/assets/92b708b0-8ae8-4dbf-bff8-94fac7c425de" />
+<br>
+<em>Tin nhắn cảnh báo được gửi tự động đến Telegram.</em>
 </p>
-*Tin nhắn cảnh báo được gửi tự động đến Telegram.*
 
 📁 **Xem toàn bộ ảnh:** [images/](images/)
 
