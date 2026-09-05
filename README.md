@@ -11,8 +11,6 @@ Dự án này là hệ thống Quản lý Sự kiện và Thông tin Bảo mật
 
 Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều nguồn (Windows, Linux, pfSense) mà còn tự động hóa việc phát hiện hành vi tấn công (mapping theo MITRE ATT&CK), phân tích ngữ cảnh log và cảnh báo thời gian thực.
 
-**Thực hiện bởi:** Nguyễn Trung Kiên, Nguyễn Văn Khánh, Hoàng Hải Dương (Học viện Kỹ thuật Mật mã).
-
 ## 🎯 Mục tiêu
 
 - 🔍 Thiết lập hệ thống SIEM tập trung với Splunk Enterprise
@@ -277,11 +275,9 @@ curl -X POST https://api.telegram.org/bot<BOT_TOKEN>/sendMessage -d "chat_id=<CH
 
 ## 👥 Tác giả
 
-- **Nguyễn Trung Kiên** – AT200432
-- **Nguyễn Văn Khánh** – AT200430
-- **Hoàng Hải Dương** – AT200415
-
-Giảng viên hướng dẫn: **TS. Lê Anh Tiến** - Khoa Công nghệ thông tin, Học viện Kỹ thuật Mật mã
+- **Nguyễn Trung Kiên**
+- **Nguyễn Văn Khánh**
+- **Hoàng Hải Dương** 
 
 ## 📄 Giấy phép
 
