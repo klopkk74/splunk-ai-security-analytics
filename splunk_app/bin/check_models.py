@@ -2,9 +2,11 @@ import urllib.request
 import json
 
 # Dien API Key cua ban vao day (Giu nguyen dau ngoac kep "")
-api_key = "AIzaSyBEVnCC24Pm6dAPoyTgETIMmqZ3tsF3wJY"
-url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+api_key = os.environ.get('GOOGLE_API_KEY')
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY environment variable is not set")
 
+url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
 try:
     print("Dang ket noi den may chu Google AI Studio...\n")
     req = urllib.request.Request(url)
