@@ -1,12 +1,74 @@
 import sys
 import json
+import os
 import urllib.request
 import urllib.parse
+import logging
 from splunk.persistconn.application import PersistentServerConnectionApplication
 
+# Cấu hình logging
+logger = logging.getLogger(__name__)
+
 class LogAnalyzerHandler(PersistentServerConnectionApplication):
+    # Danh sách index được phép truy cập
+    ALLOWED_INDEXES = ['os_win', 'os_nix', 'pfsense', 'main']
+    MAX_LOG_LENGTH = 10000
+    MAX_SEARCH_RESULTS = 1
+
     def __init__(self, command_line, command_arg):
         super(LogAnalyzerHandler, self).__init__()
+        self.system_prompt = self._load_system_prompt()
+
+    def _load_system_prompt(self):
+        """Đọc System Prompt từ file cấu hình riêng"""
+        try:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(base_dir, 'prompts_config.json')
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            return config.get('log_analyzer_prompt', '')
+        except Exception as e:
+            logger.error(f"Failed to load prompt config: {str(e)}")
+            return "[LỖI] Không thể tải cấu hình prompt. Vui lòng kiểm tra file prompts_config.json."
+
+    def _check_user_permission(self, session_key):
+        """Kiểm tra quyền của user"""
+        import splunk.rest
+        try:
+            response, content = splunk.rest.simpleRequest(
+                '/services/authentication/current-context',
+                sessionKey=session_key,
+                method='GET'
+            )
+            if response.status == 200:
+                user_info = json.loads(content)
+                roles = user_info.get('entry', [{}])[0].get('content', {}).get('roles', [])
+                if not any(role in ['admin', 'power'] for role in roles):
+                    raise PermissionError("User does not have permission to analyze logs")
+            else:
+                raise PermissionError("Unable to authenticate user permissions")
+        except Exception as e:
+            logger.error(f"Permission check failed: {str(e)}")
+            raise
+
+    def _sanitize_prompt(self, prompt):
+        """Làm sạch input để tránh prompt injection"""
+        if not prompt:
+            return ""
+        # Loại bỏ các ký tự nguy hiểm
+        dangerous_patterns = ["'''", '"""', "System:", "User:", "\n\n"]
+        for pattern in dangerous_patterns:
+            prompt = prompt.replace(pattern, "")
+        # Giới hạn độ dài
+        return prompt[:500]
+
+    def _error_response(self, message, status=500):
+        """Trả về lỗi an toàn cho client"""
+        logger.error(f"Returning error to client: {message[:200]}")
+        return {
+            'payload': json.dumps({"prompt": "", "ollama_reply": "Lỗi xử lý yêu cầu. Vui lòng thử lại sau."}),
+            'status': status
+        }
 
     def handle(self, in_string):
         try:
@@ -14,7 +76,15 @@ class LogAnalyzerHandler(PersistentServerConnectionApplication):
             query_params = dict(args.get('query', []))
             session_key = args.get('session', {}).get('authtoken', '')
 
+            # Kiểm tra quyền
+            self._check_user_permission(session_key)
+
             log_index = query_params.get('index', '*')
+            
+            # Kiểm tra index hợp lệ
+            if log_index != '*' and log_index not in self.ALLOWED_INDEXES:
+                return self._error_response("Index not allowed", 403)
+
             log_time = query_params.get('time', '')
             log_host = urllib.parse.unquote(query_params.get('host', ''))
             log_st = urllib.parse.unquote(query_params.get('st', ''))
@@ -49,7 +119,7 @@ class LogAnalyzerHandler(PersistentServerConnectionApplication):
             else:
                 search_query = f'search index="{log_index}"'
             
-            search_query += ' | head 1'
+            search_query += f' | head {self.MAX_SEARCH_RESULTS}'
             # --------------------------------------------------------------------
 
             post_args = {
@@ -80,48 +150,24 @@ class LogAnalyzerHandler(PersistentServerConnectionApplication):
                     if not found:
                         raw_log = f"[CẢNH BÁO] Splunk trả về 0 kết quả. Lệnh đã chạy: {search_query}"
             except Exception as e:
-                raw_log = f"[LỖI REST API] {str(e)}"
+                logger.error(f"REST API error: {str(e)}")
+                raw_log = "[LỖI REST API] Không thể truy xuất log. Vui lòng kiểm tra quyền và kết nối."
 
+            # Giới hạn độ dài raw log
+            if len(raw_log) > self.MAX_LOG_LENGTH:
+                raw_log = raw_log[:self.MAX_LOG_LENGTH] + "... [CẮT NGẮN DO QUÁ DÀI]"
 
-            system_prompt = (
-                "You are an Elite SOC Analyst, Threat Hunter, and DFIR Specialist. Your absolute priority is to analyze RAW LOGS to detect genuine cyber threats while STRICTLY ELIMINATING FALSE POSITIVES. You analyze logs across all domains: Windows/Linux Endpoints, Firewalls, Web Proxies, and Cloud environments.\n\n"
-                
-                "--- CORE ANALYTICAL DIMENSIONS (THE 5W1H FRAMEWORK) ---\n"
-                "When analyzing ANY log, internally evaluate the following before writing the report:\n"
-                "1. IDENTITY & PRIVILEGE (Who): Did a human user (e.g., JSmith) or a system account (e.g., NT AUTHORITY\\SYSTEM, root) perform the action? Is the privilege level appropriate for the task?\n"
-                "2. EXECUTION & ACTOR (What): The logging provider (e.g., 'Microsoft-Windows-Sysmon', 'FortiGate') is the CAMERA, NOT the ACTOR. The true Actor is the 'Image', 'ProcessName', or 'Source IP'. What command-line arguments (CommandLine) were executed?\n"
-                "3. TARGET & IMPACT (Where): What is being accessed, modified, or deleted? (e.g., TargetFilename, RegistryKey, DestinationIP, URL). Is it a critical system file or a harmless temp file?\n"
-                "4. NETWORK & COMMS: If applicable, analyze Ports, Protocols, Bytes In/Out, and Geo-location. (e.g., RDP over port 3389, DNS tunneling).\n\n"
-                
-                "--- STRICT ANTI-HALLUCINATION & NOISE REDUCTION RULES ---\n"
-                "RULE 1 - ZERO INVENTIONS: NEVER invent, guess, or append IPs, Hashes, Domains, or Usernames that are NOT explicitly written in the raw log.\n"
-                "RULE 2 - MITRE ATT&CK ACCURACY: DO NOT generate specific MITRE Technique IDs (like T1059.001) unless you are mathematically certain. Use broad Tactic names instead (e.g., 'Execution', 'Defense Evasion'). If the event is benign, state 'Không áp dụng'.\n"
-                "RULE 3 - THE 'TEMP FILE' EXCEPTION (BENIGN): Applications routinely create and delete their own temporary configuration, cache, or `.TMP` files in directories like `AppData`, `Temp`, or `ProgramData`. This is NORMAL SOFTWARE CLEANUP, not malicious file wiping. Mark as BENIGN.\n"
-                "RULE 4 - THE 'SYSTEM AUTOMATION' EXCEPTION (BENIGN): Legitimate binaries (e.g., svchost.exe, msmpeng.exe, chrome.exe) performing network checks or background updates under SYSTEM context are generally safe unless exhibiting anomalous behavior (e.g., writing to startup folders).\n\n"
-                
-                "--- OUTPUT MARKDOWN SCHEMA ---\n"
-                "You MUST generate the final report ENTIRELY IN PROFESSIONAL VIETNAMESE, preserving English IT acronyms (e.g., IP, Hash, Process, Registry, Payload). STRICTLY adhere to the following structure:\n\n"
-                
-                "**1. Tóm tắt Sự kiện (Executive Summary):**\n"
-                "[Viết 1-2 câu súc tích theo công thức: (Tác nhân/Tiến trình) dưới quyền (Tài khoản) đã thực hiện (Hành động) đối với (Mục tiêu/Đích đến). Trực tiếp, không lan man.]\n\n"
-                
-                "**2. Dữ liệu Điều tra Cốt lõi (Core IOCs & Artifacts):**\n"
-                "- **Tác nhân (Actor): [Điền chính xác giá trị của trường 'Image', 'ProcessName' hoặc 'Source IP']\n"
-                "- **Hành động (Action): [Tên hành vi. Ví Dụ: Tạo tiến trình, Xóa File, Kết nối mạng]\n"
-                "- **Mục tiêu (Target): [File đích / Dest IP / Registry Key / host]\n"
-                "- **Chỉ báo tin cậy (Hashes/Domains): [Trích xuất chính xác MD5/SHA256 hoặc Domain. Nếu không có ghi 'Không có dữ liệu']\n\n"                 
-                "**3. Phân tích Ngữ cảnh Chuyên sâu (Deep-Dive Contextual Analysis):**\n"
-                "[Phân tích logic của sự kiện: Tại sao Tác nhân lại làm việc này? Đây là hành vi hợp lệ của hệ điều hành/phần mềm (như dọn dẹp bộ nhớ đệm, tự động cập nhật) hay mang dấu hiệu của tấn công (như ẩn giấu file, thực thi mã độc)? Đưa ra lập luận rõ ràng.]\n\n"
-                
-                "**4. Đánh giá Rủi ro & Khung MITRE (Risk Assessment & MITRE ATT&CK):**\n"
-                "- **Mức độ rủi ro:** [Chọn 1: Benign (An toàn) / Low / Medium / High / Critical]\n"
-                "- **Cơ sở đánh giá:** [1 câu giải thích tại sao chọn mức độ này.]\n"
-                "- **MITRE ATT&CK:** [Liệt kê Tactics liên quan. TUYỆT ĐỐI không bịa mã T-ID. Nếu rủi ro là Benign/Low, ghi rõ 'Không áp dụng do là hành vi hệ thống hợp lệ'.]"
-            )
-            user_prompt = f"--- [RAW LOG DATA] ---\n{raw_log}\n"
+            # Kiểm tra system_prompt đã được tải thành công
+            if not self.system_prompt or self.system_prompt.startswith("[LỖI]"):
+                return self._error_response("System prompt not configured", 500)
+
+            # Sanitize user input
+            sanitized_prompt = self._sanitize_prompt(raw_log)
+            user_prompt = f"--- [RAW LOG DATA] ---\n{sanitized_prompt}\n"
+            
             payload = {
                 "model": "llama3.2:3b",
-                "prompt": f"System: {system_prompt}\n\nUser: {user_prompt}",
+                "prompt": f"System: {self.system_prompt}\n\nUser: {user_prompt}",
                 "stream": False
             }
 
@@ -133,11 +179,16 @@ class LogAnalyzerHandler(PersistentServerConnectionApplication):
                     res_body = res.read().decode('utf-8')
                     ai_reply = json.loads(res_body).get("response", "Ollama không trả về dữ liệu.")
             except Exception as e:
-                ai_reply = f"[LỖI OLLAMA] {str(e)}"
+                logger.error(f"Ollama error: {str(e)}")
+                ai_reply = "[LỖI OLLAMA] Không thể phân tích log. Vui lòng kiểm tra kết nối với Ollama."
 
             return {
                 'payload': json.dumps({"prompt": user_prompt, "ollama_reply": ai_reply}),
                 'status': 200
             }
+        except PermissionError as e:
+            logger.warning(f"Permission denied: {str(e)}")
+            return self._error_response("Không có quyền truy cập.", 403)
         except Exception as e:
-            return {'payload': json.dumps({"prompt": "Python Error", "ollama_reply": str(e)}), 'status': 500}
+            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+            return self._error_response("Lỗi xử lý yêu cầu. Vui lòng thử lại sau.", 500)
