@@ -22,7 +22,14 @@ class GeminiSPLCommand(GeneratingCommand):
         # ========== KẾT THÚC KIỂM TRA ==========
 
         # 1. Cấu hình kết nối Router
-        api_key = "sk-672399e47ff335b1-q4ungl-df9a80ec"
+        api_key = os.environ.get('API_ROUTER_KEY')
+        if not api_key:
+            yield {
+                '_time': time.time(), 
+                'Yeu_Cau': self.prompt, 
+                'SPL_Query': "LỖI: Thiếu biến môi trường API_ROUTER_KEY. Vui lòng cấu hình key cho API Router."
+            }
+            return
         url = "http://127.0.0.1:20128/v1/chat/completions"
 
         # 2. Đọc Data Dictionary
