@@ -64,6 +64,7 @@ Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều n
 | **pfSense** | pfSense | 1 | 1 | 40 |
 
 </div>
+
 ---
 
 ## 🔌 Cổng mạng sử dụng
