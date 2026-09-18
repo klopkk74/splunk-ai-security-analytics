@@ -9,7 +9,7 @@
 
 Dự án này là hệ thống Quản lý Sự kiện và Thông tin Bảo mật (SIEM) được xây dựng trên nền tảng Splunk Enterprise, kết hợp với Mô hình ngôn ngữ lớn (LLM) để tối ưu hóa quy trình vận hành của Trung tâm Điều hành An ninh mạng (SOC).
 
-Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều nguồn (Windows, Linux, pfSense) mà còn hỗ trợ phát hiện hành vi tấn công (ánh xạ theo MITRE ATT&CK), phân tích ngữ cảnh log và cảnh báo thời gian thực bằng LLM.
+Hệ thống không chỉ thu thập và chuẩn hóa dữ liệu từ nhiều nguồn (Windows, Linux, pfSense, ...) mà còn hỗ trợ phát hiện hành vi tấn công (ánh xạ theo MITRE ATT&CK), phân tích ngữ cảnh log và cảnh báo thời gian thực bằng LLM.
 
 ## 🎯 Mục tiêu
 
