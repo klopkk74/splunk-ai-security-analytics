@@ -1,4 +1,4 @@
-# 🛡️ Splunk SIEM with AI Assistant
+# 🛡️ Splunk AI Security Analytics
 
 [![Splunk](https://img.shields.io/badge/Splunk-Enterprise-00A3E0?logo=splunk&logoColor=white)](https://www.splunk.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
